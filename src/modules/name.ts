@@ -28,7 +28,7 @@ async function useName(document, apiKey) {
 	});
 
 	const result = await response.json;
-	logMessage(result.choices[0].message.content);
+	logMessage("documenttitle", result.choices[0].message.content);
 	return result.choices[0].message.content.trim();
 }
 

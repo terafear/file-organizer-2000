@@ -71,7 +71,7 @@ export default class FileOrganizer extends Plugin {
 				classifications:
 				${classifications.join(",")},
 				'", which of the following classifications would be the most appropriate?`,
-			"Please respond with the name of the most appropriate classification from the provided list. If none of the classifications are suitable, respond with 'None'.",
+			"Please respond with the name of the most appropriate classification from the provided list. If none of the classifications are suitable, respond with 'None'Respond with a single word. Very important!. Do not share an explanation",
 			this.settings.API_KEY
 		);
 	}
@@ -178,7 +178,7 @@ export default class FileOrganizer extends Plugin {
 			`Moved [[${newFileName}.${file.extension}]] to attachments`
 		);
 	}
-
+	// generate title
 	async generateNameFromContent(content: string): Promise<string> {
 		new Notice(`Generating name for ${content.substring(0, 20)}...`, 3000);
 		const name = await useName(content, this.settings.API_KEY);
@@ -258,14 +258,14 @@ export default class FileOrganizer extends Plugin {
 		// Prepare the prompt for GPT-4
 		const prompt = `Given the text "${content}" (and if relevant ${fileName}), which of the following tags are the most relevant? ${uniqueTags.join(
 			", "
-		)}`;
+		)} only write the possible tags`;
 		const mostSimilarTags = await useText(
 			prompt,
-			"Always answer with a list of tag names from the provided list. If none of the tags are relevant, answer with an empty list.",
+			"Always answer with a list of tag names from the provided list. If none of the tags are relevant, answer with an empty list. Do not add any info or explanation.",
 			this.settings.API_KEY
 		);
 		// Extract the most similar tags from the response
-
+		logMessage("mostSimilarTags", mostSimilarTags);
 		return mostSimilarTags
 			.split(",")
 			.map((tag: string) => tag.trim())
@@ -281,7 +281,7 @@ export default class FileOrganizer extends Plugin {
 			.filter((file) => this.isTFolder(file))
 			.map((folder) => folder.path);
 		const uniqueFolders = [...new Set(folderPaths)];
-		logMessage("uniqueFolders", uniqueFolders);
+		//logMessage("uniqueFolders", uniqueFolders);
 		return uniqueFolders;
 	}
 
@@ -299,7 +299,7 @@ export default class FileOrganizer extends Plugin {
 			.filter((folder) => folder !== this.settings.logFolderPath)
 			.filter((folder) => folder !== this.settings.pathToWatch);
 
-		logMessage("uniqueFolders", uniqueFolders);
+		//logMessage("uniqueFolders", uniqueFolders);
 
 		// Get the most similar folder based on the content and file name
 		const mostSimilarFolder = await useText(
@@ -308,18 +308,15 @@ export default class FileOrganizer extends Plugin {
 			}"), which of the following folders would be the most appropriate location for the file? Available folders: ${uniqueFolders.join(
 				", "
 			)}`,
-			"Please respond with the name of the most appropriate folder from the provided list. If none of the folders are suitable, respond with 'None'.",
+			"Please respond with the name of the most appropriate folder from the provided list.  If none of the folders are suitable, respond with 'None'. Exclusively respond with the name of the folder. Do not add any info or explanation.",
 			this.settings.API_KEY
 		);
-		logMessage("mostSimilarFolder", mostSimilarFolder);
+		// process mostsimilar folder string to only contain string between " "
 		new Notice(`Most similar folder: ${mostSimilarFolder}`, 3000);
 
 		// Extract the most similar folder from the response
-		const sanitizedFolderName = mostSimilarFolder.replace(
-			/[\\:*?"<>|]/g,
-			""
-		);
-
+		const sanitizedFolderName = mostSimilarFolder.replace(/"/g, "");
+		console.log("sanitizedFolderName", sanitizedFolderName);
 		// If no similar folder is found, set the destination folder as the default destination path
 		if (sanitizedFolderName === "None") {
 			destinationFolder = this.settings.defaultDestinationPath;
@@ -329,6 +326,7 @@ export default class FileOrganizer extends Plugin {
 		if (sanitizedFolderName !== "None") {
 			destinationFolder = sanitizedFolderName;
 		}
+		console.log("destination folder", destinationFolder);
 
 		// Return the determined destination folder
 		return destinationFolder;
@@ -370,6 +368,7 @@ export default class FileOrganizer extends Plugin {
 			"Please only respond with the full path of the most appropriate file from the provided list.",
 			this.settings.API_KEY
 		);
+		logMessage("most similar file", mostSimilarFile);
 
 		// Extract the most similar file from the response
 		const sanitizedFileName = mostSimilarFile.replace(/[\\:*?"<>|]/g, "");
