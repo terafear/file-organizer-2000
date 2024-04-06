@@ -1,9 +1,10 @@
 import { requestUrl } from "obsidian";
 import { logMessage } from "../../utils";
 
-async function useText(content: string, systemPrompt = "", apiKey: string) {
+async function useText(content: string, systemPrompt: string, apiKey: string) {
+	//console.log("content", content);
 	const data = {
-		model: "mistral",
+		model: "dolphin-mistral",
 		messages: [
 			{
 				role: "system",
@@ -15,7 +16,9 @@ async function useText(content: string, systemPrompt = "", apiKey: string) {
 			},
 		],
 		stream: false,
+		temperature: 0,
 	};
+	//console.log("json'data", JSON.stringify(data));
 	const response = await requestUrl({
 		url: "http://localhost:11434/v1/chat/completions",
 		method: "POST",
@@ -24,8 +27,9 @@ async function useText(content: string, systemPrompt = "", apiKey: string) {
 			"Content-Type": "application/json",
 		},
 	});
+
 	const result = await response.json;
-	//logMessage("ollama result", result.choices[0].message.content.trim());
+	logMessage("ollama result", result.choices[0].message.content.trim());
 
 	return result.choices[0].message.content.trim();
 }
@@ -49,6 +53,7 @@ export default useText;
 // 			},
 // 		],
 // 	};
+// 	console.log("json'data", JSON.stringify(data));
 
 // 	const response = await requestUrl({
 // 		url: "https://api.openai.com/v1/chat/completions",
@@ -60,7 +65,7 @@ export default useText;
 // 		},
 // 	});
 // 	const result = await response.json;
-// 	//logMessage("result", result.choices[0].message.content);
+// 	logMessage("GPT result", result.choices[0].message.content);
 // 	return result.choices[0].message.content.trim();
 // }
 

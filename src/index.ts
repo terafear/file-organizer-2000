@@ -206,7 +206,7 @@ export default class FileOrganizer extends Plugin {
 		const arrayBuffer = await this.app.vault.readBinary(file);
 		const fileContent = Buffer.from(arrayBuffer);
 		const encodedImage = fileContent.toString("base64");
-		logMessage(`Encoded: ${encodedImage.substring(0, 20)}...`);
+		//logMessage(`Encoded: ${encodedImage.substring(0, 20)}...`);
 
 		const processedContent = await useVision(
 			encodedImage,
@@ -302,28 +302,45 @@ export default class FileOrganizer extends Plugin {
 		//logMessage("uniqueFolders", uniqueFolders);
 
 		// Get the most similar folder based on the content and file name
+
+		// const mostSimilarFolder = await useText(
+		// 	`Given the text content "${content}" (and if the file name "${
+		// 		file.basename
+		// 	}"), which of the following folders would be the most appropriate location for the file? Available folders: ${uniqueFolders.join(
+		// 		", "
+		// 	)}`,
+		// 	"Please respond with the name of the most appropriate folder from the provided list.  If none of the folders are suitable, respond with 'None'. Exclusively respond with the name of the folder. Do not add any info or explanation.",
+		// 	this.settings.API_KEY
+		// );
+		const userContent = `I have a file named ${
+			file.basename
+		} with content related to '${content}'. Available folders for categorization are: ${uniqueFolders.join(
+			", "
+		)}. Select the most appropriate folder for this file based on its content. Respond only with the folder name, or 'None' if no suitable folder exists.`;
+
+		const systemPrompt = `Choose the most fitting folder from the list for the file based on its content. If there's no appropriate match, simply reply 'None'. `;
+
+		const apiKey = this.settings.API_KEY;
 		const mostSimilarFolder = await useText(
-			`Given the text content "${content}" (and if the file name "${
-				file.basename
-			}"), which of the following folders would be the most appropriate location for the file? Available folders: ${uniqueFolders.join(
-				", "
-			)}`,
-			"Please respond with the name of the most appropriate folder from the provided list.  If none of the folders are suitable, respond with 'None'. Exclusively respond with the name of the folder. Do not add any info or explanation.",
-			this.settings.API_KEY
+			userContent,
+			systemPrompt,
+			apiKey
 		);
+
 		// process mostsimilar folder string to only contain string between " "
 		new Notice(`Most similar folder: ${mostSimilarFolder}`, 3000);
 
 		// Extract the most similar folder from the response
 		const sanitizedFolderName = mostSimilarFolder.replace(/"/g, "");
 		console.log("sanitizedFolderName", sanitizedFolderName);
+
 		// If no similar folder is found, set the destination folder as the default destination path
-		if (sanitizedFolderName === "None") {
+		if (sanitizedFolderName === "None.") {
 			destinationFolder = this.settings.defaultDestinationPath;
 		}
 
 		// If a similar folder is found, set the destination folder as the most similar folder
-		if (sanitizedFolderName !== "None") {
+		if (sanitizedFolderName !== "None.") {
 			destinationFolder = sanitizedFolderName;
 		}
 		console.log("destination folder", destinationFolder);
