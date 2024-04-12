@@ -28,7 +28,10 @@ async function useText(content: string, systemPrompt: string) {
 	const result = await response.json;
 	logMessage(result);
 	logMessage(result.choices[0].message.content);
-	return result.choices[0].message.content.trim();
+	// remove all special characters except # to avoid having tags item listed with - or other special characters
+	return result.choices[0].message.content
+		.trim()
+		.replace(/[^a-zA-Z0-9# ]/g, "");
 }
 
 export default useText;
