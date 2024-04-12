@@ -249,6 +249,12 @@ export default class FileOrganizer extends Plugin {
 		const tags = this.app.metadataCache.getTags();
 
 		logMessage("tags", tags);
+		// if tags is = {} return
+		if (Object.keys(tags).length === 0) {
+			logMessage("No tags found");
+			return [];
+		}
+
 		// 2. Pass all the tags to GPT-3 and get the most similar tags
 		const tagNames = Object.keys(tags);
 		const uniqueTags = [...new Set(tagNames)];
